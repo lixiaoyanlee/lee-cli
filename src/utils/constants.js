@@ -10,7 +10,6 @@ const {
 // process.platform 在windows下获取的是 win32 ，
 // 我这里是windows 所以获取的值是 win32，再根据对应的环境变量获取到用户目录
 const downloadDirectory = `${process.env[process.platform === 'darwin' ? 'HOME' : 'USERPROFILE']}\\.myTempalte`;
-console.log(downloadDirectory);
 module.exports = {
     name,
     version,

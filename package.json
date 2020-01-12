@@ -1,13 +1,13 @@
 {
   "name": "lee-cli",
   "version": "1.0.0",
-  "description": "",
+  "description": "创建一个自己的前端脚手架工具",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "lee-cli": "./bin/www.js"
+    "lee-cli": "./bin/www"
   },
   "repository": {
     "type": "git",
@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "axios": "^0.19.1",
+    "chalk": "^3.0.0",
     "commander": "^4.1.0",
     "consolidate": "^0.15.1",
     "download-git-repo": "^3.0.2",

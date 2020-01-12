@@ -8,6 +8,7 @@ const {downloadDirectory} = require('./constants');
 const {promisify} = require('util');
 let downloadGit = require('download-git-repo');
 downloadGit = promisify(downloadGit);
+const chalk = require('chalk');
 
 const MetalSmith = require('metalsmith'); // 遍历文件夹 找需不需要渲染
 // consolidate是一个模板引擎的结合体。包括了常用的jade和ejs。
@@ -44,10 +45,47 @@ const mapActions = {
     }
 }
 
+const mapRepoInfo = {
+    repos: {
+        mess: {
+            start: '正在链接你的组织...',
+            fail: '链接组织的仓库列表为空...\n'
+
+        },
+        promptObj: {
+            type: 'list',
+            name: 'repo',
+            message: '请选择一个你要创建的项目'
+        }
+    },
+    tags: { //配置文件
+        mess: {
+            start: '正在链接仓库...',
+            fail: '链接仓库失败或者没有版本号信息...\n '
+
+        }, 
+        promptObj: {
+            type: 'list',
+            name: 'tag',
+            message: '请选择一个该项目的版本下载'
+        }
+    }
+}
 // 1) 获取仓库列表 
 // 获取 组织或者项目下的所有仓库 /orgs/:org/repos
 const fetchReopLists = async () => {
-    const {data} = await axios.get('https://api.github.com/orgs/lxy-cli/repos');
+    const {
+        data
+    } = await axios.get('https://api.github.com/orgs/lxy-cli/repos').catch(err => {
+        console.log(chalk.red(`链接组织lxy-cli失败，错误信息：${err} \n`));
+        return {
+            data: undefined
+        };
+    });
+    if (data && Array.isArray(data) && data.length == 0) {
+        console.log(chalk.yellow(`\n 链接组织lxy-cli获取仓库列表为空 \n`));
+        return;
+    }
     return data;
 }
 
@@ -56,14 +94,50 @@ const fetchReopLists = async () => {
     const spinner = ora(message);
     spinner.start();
     let result = await fn(...argv);
-    spinner.succeed(); // 结束loading
+    if (result) {
+        spinner.succeed(); // 结束loading
+    }else{
+        spinner.stop(); // 结束loading 失败
+    }
     return result;
+    
  }
 
 //  获取仓库(repo)的版本号信息
-const getTagLists =  async (repo) =>{
-   const {data} = await axios.get(`https://api.github.com/repos/lxy-cli/${repo}/tags`);
-   return data;
+const getTagLists =  async (repo) =>{   
+    const {data} = await axios.get(`https://api.github.com/repos/lxy-cli/${repo}/tags`)
+                            .catch(err=>{
+                                console.log(chalk.red(`链接仓库${repo}获取版本信息失败，错误信息：${err} \n`));
+                                return {
+                                    data: undefined
+                                };
+                            });
+    if (data && Array.isArray(data) && data.length == 0) {
+        console.log(chalk.yellow(`\n 链接仓库${repo}获取版本信息为空 \n`));
+        return;
+    }                        
+    return data;
+}
+
+
+const getChoiceContent = async (fn, mess, promptObj,...args) => {
+     let repos = await fnLoadingByOra(fn, mess.start)(...args);
+     if (Array.isArray(repos) && repos.length > 0) {
+        repos = repos.map((item) => item.name);
+     } else {
+         return;
+     }
+   
+     // 使用inquirer 在命令行中可以交互
+     const {
+         repo
+     } = await inquirer.prompt([{
+         type: promptObj.type,
+         name: promptObj.name,
+         message: promptObj.message,
+         choices: repos
+     }]);
+     return repo;
 }
 
 // 将项目下载到当前用户的临时文件夹下 
@@ -81,10 +155,8 @@ const downDir = async (repo,tag)=>{
      try {
         await downloadGit(project, filePath);
      } catch (error) {
-         console.log('错误了吗？？？\n');
-         console.log(error);
+         console.log(chalk.red(`下载仓库${project}信息失败，错误信息：${error} \n`));
      }
-   
    return {dest,filePath};
 }
 
@@ -130,10 +202,13 @@ const copyTempToLoclhost = async (target, projectName) => {
 
                      })
                      .build((err) => {
+                         
                          if (err) {
+                             console.log(chalk.red('项目生成失败', err));
                              reject();
 
                          } else {
+                             console.log(chalk.blue('项目生成成功'));
                              resolve();
                          }
                      })
@@ -148,5 +223,8 @@ module.exports = {
     fetchReopLists,
     getTagLists,
     downDir,
-    copyTempToLoclhost
+    copyTempToLoclhost, 
+    getChoiceContent,
+    mapRepoInfo
+
 };
