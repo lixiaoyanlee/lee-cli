@@ -12,8 +12,19 @@ _因为本项目工具还在完善中，所以还不能通过 `npm install lee-c
 ### 本项目工具cli已经实现
 
 ```
- lee-cli create projectName
+ lee-cli create <projectName>
 ```
+create可以生成一个项目，会询问提示是否下载默认的地址项目，还可以通过config配置:
+
+
+#### config命令已经配置
+
+```
+lee-cli config set <k> <v>
+```
+举例：
+lee-cli config set orgs lxy-cli
+
 
 ### 本项目中需要很多的模块
 
