@@ -21,6 +21,9 @@ const fs = require('fs');
 const fse = require('fs-extra');
 const inquirer = require('inquirer');
 
+const config = require('../config');
+const repoUrlObj = config('getVal');
+
 // 根据我们想要实现的功能配置执行动作，遍历产生对应的命令
 const mapActions = {
     create: {
@@ -72,22 +75,24 @@ const mapRepoInfo = {
     }
 }
 // 1) 获取仓库列表 
-// 获取 组织或者项目下的所有仓库 /orgs/:org/repos
+// 获取 组织或者项目下的所有仓库 /orgs/:org/repos  /users/:username/repos
 const fetchReopLists = async () => {
     const {
         data
-    } = await axios.get('https://api.github.com/orgs/lxy-cli/repos').catch(err => {
-        console.log(chalk.red(`链接组织lxy-cli失败，错误信息：${err} \n`));
+    } = await axios.get(`https://api.github.com/${repoUrlObj.k}/${repoUrlObj.v}/repos`).catch(err => {
+        console.log(chalk.red(`链接组织${repoUrlObj.v}失败，错误信息：${err} \n`));
         return {
             data: undefined
         };
     });
+
     if (data && Array.isArray(data) && data.length == 0) {
-        console.log(chalk.yellow(`\n 链接组织lxy-cli获取仓库列表为空 \n`));
+        console.log(chalk.yellow(`\n 链接组织${repoUrlObj.v}获取仓库列表为空 \n`));
         return;
     }
     return data;
 }
+
 
  // 封装loading效果
  const fnLoadingByOra = (fn, message) => async (...argv) =>{
@@ -104,8 +109,10 @@ const fetchReopLists = async () => {
  }
 
 //  获取仓库(repo)的版本号信息
-const getTagLists =  async (repo) =>{   
-    const {data} = await axios.get(`https://api.github.com/repos/lxy-cli/${repo}/tags`)
+const getTagLists =  async (repo) =>{ 
+    const {
+        data
+    } = await axios.get(`https://api.github.com/repos/${repoUrlObj.v}/${repo}/tags`)
                             .catch(err=>{
                                 console.log(chalk.red(`链接仓库${repo}获取版本信息失败，错误信息：${err} \n`));
                                 return {
@@ -115,7 +122,7 @@ const getTagLists =  async (repo) =>{
     if (data && Array.isArray(data) && data.length == 0) {
         console.log(chalk.yellow(`\n 链接仓库${repo}获取版本信息为空 \n`));
         return;
-    }                        
+    } 
     return data;
 }
 
@@ -133,7 +140,7 @@ const getChoiceContent = async (fn, mess, promptObj,...args) => {
          repo
      } = await inquirer.prompt([{
          type: promptObj.type,
-         name: promptObj.name,
+         name: 'repo',
          message: promptObj.message,
          choices: repos
      }]);
@@ -142,8 +149,7 @@ const getChoiceContent = async (fn, mess, promptObj,...args) => {
 
 // 将项目下载到当前用户的临时文件夹下 
 const downDir = async (repo,tag)=>{
-    console.log(tag, 'downDir方法');
-   let project = `lxy-cli/${repo}`; //下载的项目
+   let project = `${repoUrlObj.v}/${repo}`; //下载的项目
     //  C:\Users\lee\.myTempalte
    let dest = `${downloadDirectory}/${repo}`; //把项目下载当对应的目录中
    let filePath = '';
@@ -165,8 +171,7 @@ const copyTempToLoclhost = async (target, projectName) => {
         const resolvePath = path.join(path.resolve(), projectName);
         // 此处模拟如果仓库中有ask.js就表示是复杂的仓库项目
         if (!fs.existsSync(path.join(target, 'ask.js'))) {
-            await ncp(target, resolvePath);
-            fse.remove(target);
+            await ncp(target, resolvePath);            
         }else{
             //复杂项目
              // 1) 让用户填信息

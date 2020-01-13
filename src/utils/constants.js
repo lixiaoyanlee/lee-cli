@@ -9,9 +9,25 @@ const {
 // 这里我们将文件下载到当前用户下的.template文件中，由于系统的不同目录获取方式不一样，
 // process.platform 在windows下获取的是 win32 ，
 // 我这里是windows 所以获取的值是 win32，再根据对应的环境变量获取到用户目录
-const downloadDirectory = `${process.env[process.platform === 'darwin' ? 'HOME' : 'USERPROFILE']}\\.myTempalte`;
+const MY_PLATFORM_ENV = process.env[process.platform === 'darwin' ? 'HOME' : 'USERPROFILE'];
+const downloadDirectory = `${MY_PLATFORM_ENV}\\.myTempalte`;
+const configFile = `${MY_PLATFORM_ENV}\\.lxyrc`;
+const apiGitHubReposUrl = 'https://api.github.com/';
+// const defaultGitHubReposUrl = ;
+// 配置文件不存在时，默认提供的值
+// const defaultConfig = {
+//     orgs: 'lxy-cli', //默认拉取的组织名
+//     users: 'lixiaoyanlee'
+// }
+const defaultConfig = {
+    k: 'orgs',
+    v: 'lxy-cli'
+}
 module.exports = {
     name,
     version,
-    downloadDirectory
+    downloadDirectory,
+    configFile,
+    defaultConfig,
+    // defaultConfigInfo
 };
