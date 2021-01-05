@@ -27,7 +27,7 @@
     "husky": "^4.0.5"
   },
   "dependencies": {
-    "axios": "^0.19.1",
+    "axios": "^0.21.1",
     "chalk": "^3.0.0",
     "commander": "^4.1.0",
     "consolidate": "^0.15.1",
